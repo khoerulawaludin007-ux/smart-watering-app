@@ -24,6 +24,7 @@ export default function Header({
   onOpenThemeModal,
   user,
   onLogout,
+  t,
   zonesWateringCount 
 }) {
   const toggleMasterPump = () => {

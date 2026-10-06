@@ -12,6 +12,8 @@ import SettingsModal from './components/SettingsModal';
 import ThreeDBackground from './components/ThreeDBackground';
 import ThemeSelectorModal from './components/ThemeSelectorModal';
 import AuthScreen from './components/AuthScreen';
+import LanguageSwitcher from './components/LanguageSwitcher';
+import { translations } from './data/translations';
 
 import { 
   initialSystemState, 
@@ -66,6 +68,19 @@ export default function App() {
     setUser(null);
     localStorage.removeItem('agroflow_user');
     addLog('system', 'Pengguna telah keluar dari sistem.', 'info');
+  };
+
+  // Language State (id / en)
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem('agroflow_lang') || 'id';
+  });
+
+  const t = translations[lang] || translations.id;
+
+  const handleLanguageChange = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem('agroflow_lang', newLang);
+    addLog('system', `Bahasa sistem diubah ke ${newLang === 'en' ? 'English' : 'Bahasa Indonesia'}.`, 'info');
   };
 
   // Modals & 3D Theme State
@@ -259,7 +274,12 @@ export default function App() {
 
   // If not authenticated, render Login/Register Auth Screen
   if (!user) {
-    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <>
+        <AuthScreen onLoginSuccess={handleLoginSuccess} t={t} />
+        <LanguageSwitcher currentLang={lang} onLanguageChange={handleLanguageChange} />
+      </>
+    );
   }
 
   return (
@@ -267,6 +287,9 @@ export default function App() {
       
       {/* Dynamic Interactive 3D Background */}
       <ThreeDBackground currentThemeId={themeId} />
+
+      {/* Floating Language Switcher Widget (Pojok Kiri Bawah) */}
+      <LanguageSwitcher currentLang={lang} onLanguageChange={handleLanguageChange} />
 
       {/* Main Foreground Container */}
       <div className="relative z-10 flex flex-col min-h-screen justify-between">
@@ -280,6 +303,7 @@ export default function App() {
           onOpenThemeModal={() => setIsThemeModalOpen(true)}
           user={user}
           onLogout={handleLogout}
+          t={t}
           zonesWateringCount={zones.filter(z => z.valveOpen).length}
         />
 
