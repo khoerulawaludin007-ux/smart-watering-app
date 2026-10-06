@@ -1,4 +1,4 @@
-export className = {
+export const translations = {
   id: {
     // Header & Brand
     systemVersion: 'IoT Smart v2.4',
