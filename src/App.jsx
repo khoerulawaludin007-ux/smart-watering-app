@@ -11,6 +11,7 @@ import WeatherWidget from './components/WeatherWidget';
 import SettingsModal from './components/SettingsModal';
 import ThreeDBackground from './components/ThreeDBackground';
 import ThemeSelectorModal from './components/ThemeSelectorModal';
+import AuthScreen from './components/AuthScreen';
 
 import { 
   initialSystemState, 
@@ -38,8 +39,31 @@ export default function App() {
   const [zones, setZones] = useState(initialZones);
   const [schedules, setSchedules] = useState(initialSchedules);
   const [weather, setWeather] = useState(initialWeather);
-  const [logs, setLogs] = useState(initialLogs);
-  const [historyData, setHistoryData] = useState(initialHistoryData);
+  // Authentication State
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('agroflow_user');
+      return savedUser ? JSON.parse(savedUser) : {
+        name: 'Khoerul Awaludin',
+        email: 'khoerul.awaludin@kci.id',
+        role: 'Super Admin IoT'
+      };
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    localStorage.setItem('agroflow_user', JSON.stringify(userData));
+    addLog('system', `Pengguna ${userData.name} (${userData.role}) berhasil masuk.`, 'success');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('agroflow_user');
+    addLog('system', 'Pengguna telah keluar dari sistem.', 'info');
+  };
 
   // Modals & 3D Theme State
   const [activeZoneToEdit, setActiveZoneToEdit] = useState(null);
@@ -230,6 +254,11 @@ export default function App() {
     addLog('system', 'Data sensor telemetry diperbarui di grafik analytics.', 'info');
   };
 
+  // If not authenticated, render Login/Register Auth Screen
+  if (!user) {
+    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen relative text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden">
       
@@ -246,6 +275,8 @@ export default function App() {
           onOpenHardware={() => setIsHardwareOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenThemeModal={() => setIsThemeModalOpen(true)}
+          user={user}
+          onLogout={handleLogout}
           zonesWateringCount={zones.filter(z => z.valveOpen).length}
         />
 

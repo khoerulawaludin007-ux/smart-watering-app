@@ -11,7 +11,9 @@ import {
   Sparkles,
   Wifi,
   Palette,
-  Box
+  Box,
+  User,
+  LogOut
 } from 'lucide-react';
 
 export default function Header({ 
@@ -20,6 +22,8 @@ export default function Header({
   onOpenHardware, 
   onOpenSettings,
   onOpenThemeModal,
+  user,
+  onLogout,
   zonesWateringCount 
 }) {
   const toggleMasterPump = () => {
@@ -169,6 +173,29 @@ export default function Header({
           >
             <SlidersHorizontal className="w-4 h-4" />
           </button>
+
+          {/* User Profile & Logout Button */}
+          {user && (
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-900/90 border border-slate-800 rounded-xl">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="hidden xl:block text-left">
+                  <p className="text-xs font-bold text-slate-200 leading-none">{user.name}</p>
+                  <p className="text-[10px] text-emerald-400 leading-none mt-0.5">{user.role}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={onLogout}
+                className="p-2 text-red-400 hover:text-red-300 bg-red-950/30 hover:bg-red-950/60 border border-red-500/30 rounded-xl transition-all"
+                title="Keluar / Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
