@@ -39,6 +39,9 @@ export default function App() {
   const [zones, setZones] = useState(initialZones);
   const [schedules, setSchedules] = useState(initialSchedules);
   const [weather, setWeather] = useState(initialWeather);
+  const [logs, setLogs] = useState(initialLogs);
+  const [historyData, setHistoryData] = useState(initialHistoryData);
+
   // Authentication State
   const [user, setUser] = useState(() => {
     try {
