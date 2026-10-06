@@ -11,7 +11,9 @@ import {
   Sparkles,
   Wifi,
   Palette,
-  Box
+  Box,
+  LogOut,
+  UserCheck
 } from 'lucide-react';
 
 export default function Header({ 
@@ -20,7 +22,9 @@ export default function Header({
   onOpenHardware, 
   onOpenSettings,
   onOpenThemeModal,
-  zonesWateringCount 
+  zonesWateringCount,
+  currentUser,
+  onLogout
 }) {
   const toggleMasterPump = () => {
     setSystemState(prev => {
@@ -169,6 +173,36 @@ export default function Header({
           >
             <SlidersHorizontal className="w-4 h-4" />
           </button>
+
+          {/* Logged-in User Profile & Logout */}
+          {currentUser && (
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+              <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-xl text-xs">
+                <span className="text-base">{currentUser.avatar}</span>
+                <div className="hidden lg:block text-left">
+                  <div className="font-bold text-white leading-tight flex items-center gap-1">
+                    <span>{currentUser.name}</span>
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold ${
+                      currentUser.roleBadge === 'ADMIN' 
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' 
+                        : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                    }`}>
+                      {currentUser.roleBadge}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={onLogout}
+                className="p-2 text-rose-400 hover:text-rose-200 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 rounded-xl transition-all flex items-center gap-1 text-xs font-semibold"
+                title="Keluar / Logout"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden xl:inline">Logout</span>
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

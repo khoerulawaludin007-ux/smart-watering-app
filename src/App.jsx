@@ -11,6 +11,7 @@ import WeatherWidget from './components/WeatherWidget';
 import SettingsModal from './components/SettingsModal';
 import ThreeDBackground from './components/ThreeDBackground';
 import ThemeSelectorModal from './components/ThemeSelectorModal';
+import LoginScreen, { defaultAccounts } from './components/LoginScreen';
 
 import { 
   initialSystemState, 
@@ -40,6 +41,26 @@ export default function App() {
   const [weather, setWeather] = useState(initialWeather);
   const [logs, setLogs] = useState(initialLogs);
   const [historyData, setHistoryData] = useState(initialHistoryData);
+
+  // Auth & User State
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('agroflow_user');
+    return saved ? JSON.parse(saved) : defaultAccounts[0]; // Admin pre-logged in by default
+  });
+
+  const handleLoginSuccess = (accountObj) => {
+    setCurrentUser(accountObj);
+    localStorage.setItem('agroflow_user', JSON.stringify(accountObj));
+    addLog('system', `User "${accountObj.name}" (${accountObj.roleBadge}) berhasil login.`, 'success');
+  };
+
+  const handleLogout = () => {
+    if (currentUser) {
+      addLog('system', `User "${currentUser.name}" telah logout.`, 'info');
+    }
+    setCurrentUser(null);
+    localStorage.removeItem('agroflow_user');
+  };
 
   // Modals & 3D Theme State
   const [activeZoneToEdit, setActiveZoneToEdit] = useState(null);
@@ -236,18 +257,23 @@ export default function App() {
       {/* Dynamic Interactive 3D Background */}
       <ThreeDBackground currentThemeId={themeId} />
 
-      {/* Main Foreground Container */}
-      <div className="relative z-10 flex flex-col min-h-screen justify-between">
+      {!currentUser ? (
+        <LoginScreen onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        /* Main Foreground Container */
+        <div className="relative z-10 flex flex-col min-h-screen justify-between">
 
-        {/* App Header Bar */}
-        <Header
-          systemState={systemState}
-          setSystemState={setSystemState}
-          onOpenHardware={() => setIsHardwareOpen(true)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenThemeModal={() => setIsThemeModalOpen(true)}
-          zonesWateringCount={zones.filter(z => z.valveOpen).length}
-        />
+          {/* App Header Bar */}
+          <Header
+            systemState={systemState}
+            setSystemState={setSystemState}
+            onOpenHardware={() => setIsHardwareOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenThemeModal={() => setIsThemeModalOpen(true)}
+            zonesWateringCount={zones.filter(z => z.valveOpen).length}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
 
         {/* Main Content Dashboard */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8">
@@ -332,7 +358,8 @@ export default function App() {
           </div>
         </footer>
 
-      </div>
+        </div>
+      )}
 
       {/* Modals & Hardware Simulator */}
       <ZoneModal
