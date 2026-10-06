@@ -74,9 +74,9 @@ export default function Header({
               </div>
               <p className="text-xs text-slate-400 flex items-center space-x-1.5 mt-0.5">
                 <Wifi className="w-3 h-3 text-emerald-400 inline" />
-                <span>ESP32 connected</span>
+                <span>{t?.espConnected || 'ESP32 connected'}</span>
                 <span className="text-slate-600">•</span>
-                <span className="text-slate-400">Kebun Otomatis</span>
+                <span className="text-slate-400">{t?.automaticGarden || 'Kebun Otomatis'}</span>
               </p>
             </div>
           </div>
@@ -88,7 +88,7 @@ export default function Header({
               className="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg flex items-center gap-1.5 border border-slate-700"
             >
               <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Simulasi</span>
+              <span>{t?.espSim || 'Simulasi'}</span>
             </button>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function Header({
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Auto Smart</span>
+              <span>{t?.autoSmart || 'Auto Smart'}</span>
             </button>
             <button
               onClick={() => setSystemState(prev => ({ ...prev, autoMode: false }))}
@@ -118,7 +118,7 @@ export default function Header({
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Manual Override</span>
+              <span className="hidden sm:inline">{t?.manualOverride || 'Manual Override'}</span>
             </button>
           </div>
 
@@ -126,7 +126,7 @@ export default function Header({
           {systemState.rainDelayHours > 0 ? (
             <div className="px-3 py-1.5 bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-medium flex items-center gap-2">
               <CloudRain className="w-4 h-4 text-cyan-400 animate-bounce" />
-              <span>Tunda Hujan ({systemState.rainDelayHours}j)</span>
+              <span>{t?.rainDelay || 'Tunda Hujan'} ({systemState.rainDelayHours}{t?.hoursShort || 'h'})</span>
             </div>
           ) : null}
 
@@ -142,8 +142,8 @@ export default function Header({
             <Power className={`w-4 h-4 ${systemState.masterPumpState || zonesWateringCount > 0 ? 'text-slate-950' : 'text-slate-400'}`} />
             <span>
               {systemState.masterPumpState || zonesWateringCount > 0 
-                ? `POMPA UTAMA AKTIF (${systemState.masterPumpFlowRate} L/min)` 
-                : 'POMPA MATI'}
+                ? `${t?.masterPumpActive || 'POMPA UTAMA AKTIF'} (${systemState.masterPumpFlowRate} L/min)` 
+                : (t?.masterPumpOff || 'POMPA MATI')}
             </span>
           </button>
 
@@ -154,7 +154,7 @@ export default function Header({
             title="Pilih Warna Background 3D"
           >
             <Palette className="w-4 h-4 text-emerald-400 animate-pulse" />
-            <span className="hidden sm:inline">Tema 3D</span>
+            <span className="hidden sm:inline">{t?.theme3D || 'Tema 3D'}</span>
           </button>
 
           {/* Desktop Hardware Simulator Button */}
@@ -163,7 +163,7 @@ export default function Header({
             className="hidden md:flex px-3 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-cyan-500/30 rounded-xl items-center gap-1.5 transition-all hover:shadow-glow-cyan"
           >
             <Cpu className="w-4 h-4" />
-            <span>Simulasi ESP32</span>
+            <span>{t?.espSim || 'Simulasi ESP32'}</span>
           </button>
 
           {/* Settings Modal Button */}

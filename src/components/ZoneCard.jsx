@@ -30,7 +30,8 @@ export default function ZoneCard({
   onStartWatering, 
   onStopWatering, 
   onUpdateThreshold,
-  onEditZone 
+  onEditZone,
+  t 
 }) {
   const IconComponent = iconMap[zone.icon] || Sprout;
   const isWatering = zone.valveOpen || zone.status === 'watering';
@@ -94,10 +95,10 @@ export default function ZoneCard({
         <div className="bg-slate-950/60 rounded-xl p-4 border border-slate-800/80 mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
-              <Droplet className="w-3.5 h-3.5 text-cyan-400" /> Kelembapan Tanah
+              <Droplet className="w-3.5 h-3.5 text-cyan-400" /> {t?.moisture || 'Kelembapan Tanah'}
             </span>
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${getMoistureColor(zone.moisture)}`}>
-              {zone.moisture}% (Target: {zone.targetMoisture}%)
+              {zone.moisture}% ({t?.target || 'Target'}: {zone.targetMoisture}%)
             </span>
           </div>
 
@@ -117,15 +118,15 @@ export default function ZoneCard({
             <div 
               className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-10 shadow-sm"
               style={{ left: `${zone.thresholdMin}%` }}
-              title={`Ambang Batas Minimum: ${zone.thresholdMin}%`}
+              title={`${t?.minThreshold || 'Ambang Min'}: ${zone.thresholdMin}%`}
             />
           </div>
 
           <div className="flex justify-between items-center text-[11px] text-slate-400 mt-2">
             <span className="flex items-center gap-1">
-              Ambang Min: <strong className="text-amber-400">{zone.thresholdMin}%</strong>
+              {t?.minThreshold || 'Ambang Min'}: <strong className="text-amber-400">{zone.thresholdMin}%</strong>
             </span>
-            <span className="text-slate-400">Terakhir: {zone.lastWatered}</span>
+            <span className="text-slate-400">{t?.lastWatered || 'Terakhir'}: {zone.lastWatered}</span>
           </div>
         </div>
 
@@ -134,14 +135,14 @@ export default function ZoneCard({
           <div className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80 flex items-center space-x-2.5">
             <Thermometer className="w-4 h-4 text-rose-400 shrink-0" />
             <div>
-              <p className="text-[10px] text-slate-400 font-medium">Suhu Tanah</p>
+              <p className="text-[10px] text-slate-400 font-medium">{t?.soilTemp || 'Suhu Tanah'}</p>
               <p className="text-xs font-bold text-slate-200">{zone.temperature} °C</p>
             </div>
           </div>
           <div className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80 flex items-center space-x-2.5">
             <Wind className="w-4 h-4 text-cyan-400 shrink-0" />
             <div>
-              <p className="text-[10px] text-slate-400 font-medium">Kelembapan Udara</p>
+              <p className="text-[10px] text-slate-400 font-medium">{t?.airHumidity || 'Kelembapan Udara'}</p>
               <p className="text-xs font-bold text-slate-200">{zone.humidity} %</p>
             </div>
           </div>
@@ -151,7 +152,7 @@ export default function ZoneCard({
         <div className="bg-slate-900/40 p-3 rounded-xl border border-slate-800/60 mb-4">
           <div className="flex justify-between items-center text-xs mb-1.5">
             <span className="text-slate-400 font-medium flex items-center gap-1">
-              <Sliders className="w-3.5 h-3.5 text-emerald-400" /> Ambang Pemicu Otomatis:
+              <Sliders className="w-3.5 h-3.5 text-emerald-400" /> {t?.autoThresholdTrigger || 'Ambang Pemicu Otomatis'}:
             </span>
             <span className="text-emerald-400 font-bold">{zone.thresholdMin}%</span>
           </div>
@@ -177,13 +178,13 @@ export default function ZoneCard({
                 <Droplet className="w-4 h-4 text-teal-400 anim-drop-delay-2" />
               </div>
               <span className="text-xs font-bold text-emerald-300">
-                Penyiraman Berlangsung ({zone.waterFlowRate} L/min)
+                Watering Active ({zone.waterFlowRate} L/min)
               </span>
             </div>
 
             {zone.timeRemaining > 0 && (
               <p className="text-xs font-semibold text-slate-300 mb-2">
-                Sisa Waktu: <span className="text-emerald-400 font-mono text-sm">{formatCountdown(zone.timeRemaining)}</span>
+                Time Left: <span className="text-emerald-400 font-mono text-sm">{formatCountdown(zone.timeRemaining)}</span>
               </p>
             )}
 
@@ -192,14 +193,14 @@ export default function ZoneCard({
               className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-rose-900/30"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
-              <span>HENTIKAN PENYIRAMAN</span>
+              <span>{t?.stopWatering || 'Hentikan'}</span>
             </button>
           </div>
         ) : (
           <div>
             <p className="text-[11px] text-slate-400 font-semibold mb-2 flex items-center justify-between">
-              <span>Mulai Siram Manual:</span>
-              <span className="text-slate-400 font-normal">Solenoid Valve 12V</span>
+              <span>{t?.startWatering || 'Mulai Siram Manual'}:</span>
+              <span className="text-slate-400 font-normal">Solenoid 12V</span>
             </p>
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -207,21 +208,21 @@ export default function ZoneCard({
                 className="py-2 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all hover:border-emerald-400"
               >
                 <Play className="w-3 h-3 fill-current" />
-                <span>1 Min</span>
+                <span>1 {t?.minutes || 'Min'}</span>
               </button>
               <button
                 onClick={() => onStartWatering(zone.id, 5)}
                 className="py-2 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all hover:border-emerald-400"
               >
                 <Play className="w-3 h-3 fill-current" />
-                <span>5 Min</span>
+                <span>5 {t?.minutes || 'Min'}</span>
               </button>
               <button
                 onClick={() => onStartWatering(zone.id, 10)}
                 className="py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all shadow-md shadow-emerald-900/30"
               >
                 <Play className="w-3 h-3 fill-current" />
-                <span>10 Min</span>
+                <span>10 {t?.minutes || 'Min'}</span>
               </button>
             </div>
           </div>

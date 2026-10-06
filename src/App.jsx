@@ -332,10 +332,10 @@ export default function App() {
             <div>
               <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
                 <Droplets className="w-5 h-5 text-emerald-400" />
-                <span>Kontrol Utama Zona Penyiraman ({zones.length} Sektor)</span>
+                <span>{t?.mainControlTitle || 'Kontrol Utama Zona Penyiraman'} ({zones.length} {t?.sectors || 'Sektor'})</span>
               </h2>
               <p className="text-xs text-slate-400">
-                Setiap zona terhubung ke Solenoid Valve 12V dan Probe Kelembapan Capacitive
+                {t?.sensorDescription || 'Setiap zona terhubung ke Solenoid Valve 12V dan Probe Kelembapan Capacitive'}
               </p>
             </div>
           </div>
@@ -350,6 +350,7 @@ export default function App() {
                 onStopWatering={handleStopWatering}
                 onUpdateThreshold={handleUpdateThreshold}
                 onEditZone={(z) => setActiveZoneToEdit(z)}
+                t={t}
               />
             ))}
           </div>
