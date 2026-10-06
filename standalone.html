@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgroFlow - Smart Automatic Watering & Irrigation Controller</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- React, ReactDOM, Babel & Lucide Icons CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+
+  <style>
+    body {
+      background-color: #060913;
+      background-image: 
+        radial-gradient(at 20% 20%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 80%, rgba(15, 23, 42, 0.5) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-panel-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-panel-hover:hover {
+      border-color: rgba(34, 197, 94, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px -10px rgba(34, 197, 94, 0.15);
+    }
+    .glass-input {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    .glass-input:focus {
+      outline: none;
+      border-color: #22c55e;
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+    }
+    @keyframes drop {
+      0% { transform: translateY(-5px); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(12px); opacity: 0; }
+    }
+    .anim-drop { animation: drop 1.5s ease-in-out infinite; }
+    .anim-drop-delay-1 { animation: drop 1.5s ease-in-out 0.5s infinite; }
+    .anim-drop-delay-2 { animation: drop 1.5s ease-in-out 1s infinite; }
+  </style>
+</head>
+<body class="text-slate-100 antialiased font-sans min-h-screen selection:bg-emerald-500 selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Custom Lucide Icon helper for Babel standalone
+    const Icon = ({ name, size = 18, className = "" }) => {
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }, [name]);
+      return <i data-lucide={name} className={`inline-block ${className}`} style={{ width: size, height: size }}></i>;
+    };
+
+    const initialSystemState = {
+      autoMode: true,
+      masterPumpState: false,
+      masterPumpFlowRate: 14.5,
+      waterTankLevel: 82,
+      waterTankCapacityLiters: 1000,
+      rainDelayHours: 0,
+      rainDetected: false,
+      totalWaterTodayLiters: 184,
+      estimatedWaterSavedLiters: 45,
+      esp32Status: 'Online',
+    };
+
+    const initialZones = [
+      {
+        id: 'zone-1',
+        name: 'Zona 1: Kebun Sayur Organik',
+        crop: 'Bayam, Kangkung & Tomat',
+        soilType: 'Lempur Berpasir',
+        moisture: 38,
+        targetMoisture: 55,
+        thresholdMin: 40,
+        temperature: 27.5,
+        humidity: 62,
+        status: 'idle',
+        valveOpen: false,
+        durationMinutes: 10,
+        timeRemaining: 0,
+        lastWatered: 'Hari ini, 06:00 WIB',
+        waterFlowRate: 4.2,
+        autoWaterEnabled: true,
+        icon: 'sprout'
+      },
+      {
+        id: 'zone-2',
+        name: 'Zona 2: Taman Bunga Depan',
+        crop: 'Anggrek, Mawar & Miana',
+        soilType: 'Tanah Humus',
+        moisture: 64,
+        targetMoisture: 60,
+        thresholdMin: 45,
+        temperature: 28.1,
+        humidity: 59,
+        status: 'idle',
+        valveOpen: false,
+        durationMinutes: 8,
+        timeRemaining: 0,
+        lastWatered: 'Kemarin, 17:30 WIB',
+        waterFlowRate: 3.5,
+        autoWaterEnabled: true,
+        icon: 'flower-2'
+      },
+      {
+        id: 'zone-3',
+        name: 'Zona 3: Greenhouse Hidroponik',
+        crop: 'Bibit Melon & Selada',
+        soilType: 'Cocopeat & Perlite',
+        moisture: 78,
+        targetMoisture: 75,
+        thresholdMin: 65,
+        temperature: 26.2,
+        humidity: 75,
+        status: 'idle',
+        valveOpen: false,
+        durationMinutes: 5,
+        timeRemaining: 0,
+        lastWatered: 'Hari ini, 12:00 WIB',
+        waterFlowRate: 2.8,
+        autoWaterEnabled: true,
+        icon: 'building-2'
+      },
+      {
+        id: 'zone-4',
+        name: 'Zona 4: Kebun Buah Tabulampot',
+        crop: 'Jeruk Chokanan & Mangga',
+        soilType: 'Tanah Merah Berkompos',
+        moisture: 32,
+        targetMoisture: 50,
+        thresholdMin: 35,
+        temperature: 29.4,
+        humidity: 54,
+        status: 'idle',
+        valveOpen: false,
+        durationMinutes: 15,
+        timeRemaining: 0,
+        lastWatered: '2 hari lalu',
+        waterFlowRate: 5.0,
+        autoWaterEnabled: true,
+        icon: 'apple'
+      }
+    ];
+
+    const initialSchedules = [
+      { id: 'sched-1', name: 'Penyiraman Pagi Kebun Sayur', zoneName: 'Zona 1: Kebun Sayur Organik', time: '06:00', days: ['Sen','Sel','Rab','Kam','Jum','Sab','Min'], durationMinutes: 10, enabled: true, smartRainSkip: true },
+      { id: 'sched-2', name: 'Penyiraman Sore Taman & Bunga', zoneName: 'Zona 2: Taman Bunga Depan', time: '16:30', days: ['Sen','Rab','Jum','Min'], durationMinutes: 8, enabled: true, smartRainSkip: true },
+      { id: 'sched-3', name: 'Kelembapan Kritis Kebun Buah', zoneName: 'Zona 4: Kebun Buah Tabulampot', time: '11:00', days: ['Sen','Sel','Rab','Kam','Jum','Sab','Min'], durationMinutes: 15, enabled: true, smartRainSkip: true }
+    ];
+
+    const initialWeather = {
+      location: 'Bandung, Jawa Barat',
+      temp: 27,
+      condition: 'Cerah Berawan',
+      humidity: 62,
+      windSpeed: '12 km/jam',
+      rainProbability: 20
+    };
+
+    const initialLogs = [
+      { id: 'log-1', timestamp: '20:25:10 WIB', type: 'system', message: 'Mikrokontroler ESP32 terhubung kembali via MQTT broker.', severity: 'info' },
+      { id: 'log-2', timestamp: '18:00:00 WIB', type: 'auto', message: 'Sensor Zona 4 mencatat kelembapan 32% (dibawah ambang batas 35%). Sistem menyarankan penyiraman.', severity: 'warning' },
+      { id: 'log-3', timestamp: '12:00:15 WIB', type: 'schedule', message: 'Penyiraman otomatis Zona 3 selesai (Durasi: 5 Menit). Air digunakan: 14 Liters.', severity: 'success' }
+    ];
+
+    const initialHistoryData = [
+      { time: '06:00', moistureZ1: 58, moistureZ2: 65, moistureZ3: 76, moistureZ4: 45, waterUsed: 42 },
+      { time: '09:00', moistureZ1: 52, moistureZ2: 64, moistureZ3: 75, moistureZ4: 42, waterUsed: 0 },
+      { time: '12:00', moistureZ1: 46, moistureZ2: 62, moistureZ3: 78, moistureZ4: 38, waterUsed: 14 },
+      { time: '15:00', moistureZ1: 41, moistureZ2: 60, moistureZ3: 74, moistureZ4: 35, waterUsed: 0 },
+      { time: '18:00', moistureZ1: 39, moistureZ2: 64, moistureZ3: 76, moistureZ4: 33, waterUsed: 0 },
+      { time: '20:30', moistureZ1: 38, moistureZ2: 64, moistureZ3: 78, moistureZ4: 32, waterUsed: 0 },
+    ];
+
+    function App() {
+      const [systemState, setSystemState] = useState(initialSystemState);
+      const [zones, setZones] = useState(initialZones);
+      const [schedules, setSchedules] = useState(initialSchedules);
+      const [weather, setWeather] = useState(initialWeather);
+      const [logs, setLogs] = useState(initialLogs);
+      const [historyData, setHistoryData] = useState(initialHistoryData);
+      
+      const [isHardwareOpen, setIsHardwareOpen] = useState(false);
+      const [activeZoneModal, setActiveZoneModal] = useState(null);
+
+      const addLog = (type, message, severity = 'info') => {
+        const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+        setLogs(prev => [{ id: `log-${Date.now()}`, timestamp: timeStr, type, message, severity }, ...prev]);
+      };
+
+      // Real-time loop
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setZones(prevZones => {
+            let totalWaterUsedInTick = 0;
+            return prevZones.map(zone => {
+              let nextMoisture = zone.moisture;
+              let nextTimeRem = zone.timeRemaining;
+              let nextValve = zone.valveOpen;
+              let nextStatus = zone.status;
+
+              if (zone.valveOpen) {
+                nextMoisture = Math.min(100, nextMoisture + 2);
+                totalWaterUsedInTick += (zone.waterFlowRate / 60) * 1.5;
+                if (nextTimeRem > 0) {
+                  nextTimeRem = Math.max(0, nextTimeRem - 1.5);
+                  if (nextTimeRem === 0) {
+                    nextValve = false;
+                    nextStatus = 'idle';
+                    addLog('schedule', `Penyiraman ${zone.name} selesai (Target Kelembapan ${nextMoisture}%).`, 'success');
+                  }
+                }
+              } else {
+                if (Math.random() < 0.2) nextMoisture = Math.max(10, nextMoisture - 1);
+              }
+
+              if (systemState.autoMode && systemState.rainDelayHours === 0 && !systemState.rainDetected) {
+                if (!nextValve && nextMoisture < zone.thresholdMin && zone.autoWaterEnabled) {
+                  nextValve = true;
+                  nextStatus = 'watering';
+                  nextTimeRem = zone.durationMinutes * 60;
+                  addLog('auto', `AUTO SMART: Kelembapan ${zone.name} (${nextMoisture}%) &lt; ambang batas (${zone.thresholdMin}%). Membuka Solenoid.`, 'warning');
+                }
+              }
+
+              return { ...zone, moisture: nextMoisture, timeRemaining: Math.round(nextTimeRem), valveOpen: nextValve, status: nextStatus };
+            });
+          });
+        }, 1500);
+
+        return () => clearInterval(timer);
+      }, [systemState.autoMode, systemState.rainDelayHours, systemState.rainDetected]);
+
+      const startWatering = (zoneId, mins) => {
+        setZones(prev => prev.map(z => z.id === zoneId ? { ...z, valveOpen: true, status: 'watering', durationMinutes: mins, timeRemaining: mins * 60, lastWatered: 'Baru saja' } : z));
+        addLog('manual', `Manual Override: Menyiram zona ${zoneId} selama ${mins} Menit.`, 'info');
+      };
+
+      const stopWatering = (zoneId) => {
+        setZones(prev => prev.map(z => z.id === zoneId ? { ...z, valveOpen: false, status: 'idle', timeRemaining: 0 } : z));
+        addLog('manual', `Penyiraman zona ${zoneId} Dihentikan.`, 'info');
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col justify-between">
+          
+          {/* Header */}
+          <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800 px-6 py-3">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 p-0.5 shadow-lg shadow-emerald-500/20 flex items-center justify-center">
+                  <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-emerald-400">
+                    <Icon name="droplet" size={20} className="animate-pulse" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-xl font-extrabold bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+                    AgroFlow IoT
+                  </h1>
+                  <p className="text-[11px] text-slate-400">Sistem Kontrol Penyiraman Otomatis Cerdas</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setSystemState(prev => ({ ...prev, autoMode: !prev.autoMode }))}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    systemState.autoMode ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-amber-600 text-white'
+                  }`}
+                >
+                  {systemState.autoMode ? 'Mode: AUTO SMART' : 'Mode: MANUAL'}
+                </button>
+
+                <button
+                  onClick={() => setIsHardwareOpen(true)}
+                  className="px-3 py-1.5 text-xs font-semibold bg-slate-900 text-cyan-400 border border-cyan-500/30 rounded-xl flex items-center gap-1.5"
+                >
+                  <Icon name="cpu" size={16} />
+                  <span>Simulasi ESP32</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Body */}
+          <main className="max-w-7xl mx-auto px-6 py-8 w-full flex-1">
+            
+            {/* Overview Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <div className="glass-panel rounded-2xl p-5">
+                <p className="text-xs text-slate-400 uppercase font-semibold">Rata-rata Kelembapan</p>
+                <p className="text-3xl font-extrabold text-emerald-400 mt-1">
+                  {Math.round(zones.reduce((a,b)=>a+b.moisture,0)/zones.length)}%
+                </p>
+                <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+                  <div className="bg-emerald-400 h-full" style={{ width: `${Math.round(zones.reduce((a,b)=>a+b.moisture,0)/zones.length)}%` }} />
+                </div>
+              </div>
+
+              <div className="glass-panel rounded-2xl p-5">
+                <p className="text-xs text-slate-400 uppercase font-semibold">Level Tangki Air</p>
+                <p className="text-3xl font-extrabold text-cyan-400 mt-1">{systemState.waterTankLevel}%</p>
+                <p className="text-xs text-slate-500 mt-1">820 / 1000 Liters Available</p>
+              </div>
+
+              <div className="glass-panel rounded-2xl p-5">
+                <p className="text-xs text-slate-400 uppercase font-semibold">Zona Disiram</p>
+                <p className="text-3xl font-extrabold text-white mt-1">
+                  {zones.filter(z=>z.valveOpen).length} / {zones.length}
+                </p>
+                <p className="text-xs text-emerald-400 mt-1">Status: Solenoid 12V Ready</p>
+              </div>
+
+              <div className="glass-panel rounded-2xl p-5">
+                <p className="text-xs text-slate-400 uppercase font-semibold">Air Digunakan Hari Ini</p>
+                <p className="text-3xl font-extrabold text-teal-400 mt-1">{systemState.totalWaterTodayLiters} L</p>
+                <p className="text-xs text-emerald-400 mt-1">+45 L Hemat Air via Smart Skip</p>
+              </div>
+            </div>
+
+            {/* Zones Grid */}
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Icon name="droplets" size={20} className="text-emerald-400" />
+              <span>Sektor & Zona Penyiraman Tanah</span>
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {zones.map(z => (
+                <div key={z.id} className={`glass-panel rounded-2xl p-5 flex flex-col justify-between border ${z.valveOpen ? 'border-emerald-500 shadow-glow-emerald' : 'border-slate-800'}`}>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-sm text-slate-100">{z.name}</h3>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${z.moisture < z.thresholdMin ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                        {z.moisture}%
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-400 mb-2">{z.crop} • {z.soilType}</p>
+
+                    <div className="w-full bg-slate-900 rounded-full h-3 mb-3 overflow-hidden p-0.5 border border-slate-800">
+                      <div className="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full rounded-full transition-all duration-500" style={{ width: `${z.moisture}%` }} />
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 mb-4 flex justify-between">
+                      <span>Ambang Min: <strong className="text-amber-400">{z.thresholdMin}%</strong></span>
+                      <span>Target: {z.targetMoisture}%</span>
+                    </p>
+                  </div>
+
+                  <div>
+                    {z.valveOpen ? (
+                      <div className="bg-emerald-950/80 p-3 rounded-xl text-center border border-emerald-500/40">
+                        <p className="text-xs font-bold text-emerald-400 mb-2">MENYIRAM ({z.waterFlowRate} L/min)</p>
+                        <button onClick={() => stopWatering(z.id)} className="w-full py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold">
+                          HENTIKAN
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <button onClick={() => startWatering(z.id, 1)} className="py-1.5 bg-slate-900 text-emerald-400 rounded-lg text-xs font-bold border border-slate-800">1m</button>
+                        <button onClick={() => startWatering(z.id, 5)} className="py-1.5 bg-slate-900 text-emerald-400 rounded-lg text-xs font-bold border border-slate-800">5m</button>
+                        <button onClick={() => startWatering(z.id, 10)} className="py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold">10m</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Log Feed */}
+            <div className="glass-panel rounded-2xl p-5">
+              <h3 className="font-bold text-sm text-slate-200 mb-3">Catatan Event System & Sensors</h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {logs.map(l => (
+                  <div key={l.id} className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                    <span className="text-slate-300">{l.message}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{l.timestamp}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </main>
+
+          {/* Footer */}
+          <footer className="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+            © 2026 AgroFlow Smart Irrigation IoT by Khoerul Awaludin. All rights reserved.
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
