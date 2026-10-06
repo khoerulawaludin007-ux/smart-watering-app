@@ -93,7 +93,7 @@ export default function Header({
         </div>
 
         {/* Global Controls & Status Badges */}
-        <div className="flex items-center flex-wrap gap-2.5">
+        <div className="flex items-center flex-wrap md:flex-nowrap justify-end gap-2.5">
           
           {/* Mode Selector Toggle (Otomatis / Manual) */}
           <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-1 shadow-inner">
@@ -117,7 +117,7 @@ export default function Header({
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Manual Override</span>
+              <span className="hidden sm:inline">Manual Override</span>
             </button>
           </div>
 
@@ -132,7 +132,7 @@ export default function Header({
           {/* Master Water Pump Switch */}
           <button
             onClick={toggleMasterPump}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg ${
               systemState.masterPumpState || zonesWateringCount > 0
                 ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 animate-pulse'
                 : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
@@ -142,14 +142,14 @@ export default function Header({
             <span>
               {systemState.masterPumpState || zonesWateringCount > 0 
                 ? `POMPA UTAMA AKTIF (${systemState.masterPumpFlowRate} L/min)` 
-                : 'POMPA UTAMA MATI'}
+                : 'POMPA MATI'}
             </span>
           </button>
 
           {/* 3D Theme Selector Button */}
           <button
             onClick={onOpenThemeModal}
-            className="px-3.5 py-2 text-xs font-semibold bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 hover:from-emerald-500/20 hover:to-cyan-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl flex items-center gap-2 transition-all shadow-sm hover:border-emerald-400"
+            className="px-3 py-2 text-xs font-semibold bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 hover:from-emerald-500/20 hover:to-cyan-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl flex items-center gap-1.5 transition-all shadow-sm hover:border-emerald-400"
             title="Pilih Warna Background 3D"
           >
             <Palette className="w-4 h-4 text-emerald-400 animate-pulse" />
@@ -159,7 +159,7 @@ export default function Header({
           {/* Desktop Hardware Simulator Button */}
           <button
             onClick={onOpenHardware}
-            className="hidden md:flex px-3.5 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-cyan-500/30 rounded-xl items-center gap-2 transition-all hover:shadow-glow-cyan"
+            className="hidden md:flex px-3 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-cyan-500/30 rounded-xl items-center gap-1.5 transition-all hover:shadow-glow-cyan"
           >
             <Cpu className="w-4 h-4" />
             <span>Simulasi ESP32</span>
@@ -174,22 +174,22 @@ export default function Header({
             <SlidersHorizontal className="w-4 h-4" />
           </button>
 
-          {/* User Profile & Logout Button */}
+          {/* User Profile & Logout Button (Always at FAR RIGHT) */}
           {user && (
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-900/90 border border-slate-800 rounded-xl">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-800 shrink-0">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/90 border border-slate-800 rounded-xl">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
                   {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <div className="hidden xl:block text-left">
-                  <p className="text-xs font-bold text-slate-200 leading-none">{user.name}</p>
-                  <p className="text-[10px] text-emerald-400 leading-none mt-0.5">{user.role}</p>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-slate-200 leading-none whitespace-nowrap">{user.name}</p>
+                  <p className="text-[10px] text-emerald-400 leading-none mt-0.5 whitespace-nowrap">{user.role}</p>
                 </div>
               </div>
 
               <button
                 onClick={onLogout}
-                className="p-2 text-red-400 hover:text-red-300 bg-red-950/30 hover:bg-red-950/60 border border-red-500/30 rounded-xl transition-all"
+                className="p-2 text-red-400 hover:text-red-300 bg-red-950/30 hover:bg-red-950/60 border border-red-500/30 rounded-xl transition-all shrink-0"
                 title="Keluar / Logout"
               >
                 <LogOut className="w-4 h-4" />
