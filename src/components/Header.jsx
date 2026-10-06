@@ -9,7 +9,9 @@ import {
   ShieldCheck, 
   ShieldAlert,
   Sparkles,
-  Wifi
+  Wifi,
+  Palette,
+  Box
 } from 'lucide-react';
 
 export default function Header({ 
@@ -17,6 +19,7 @@ export default function Header({
   setSystemState, 
   onOpenHardware, 
   onOpenSettings,
+  onOpenThemeModal,
   zonesWateringCount 
 }) {
   const toggleMasterPump = () => {
@@ -137,6 +140,16 @@ export default function Header({
                 ? `POMPA UTAMA AKTIF (${systemState.masterPumpFlowRate} L/min)` 
                 : 'POMPA UTAMA MATI'}
             </span>
+          </button>
+
+          {/* 3D Theme Selector Button */}
+          <button
+            onClick={onOpenThemeModal}
+            className="px-3.5 py-2 text-xs font-semibold bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 hover:from-emerald-500/20 hover:to-cyan-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl flex items-center gap-2 transition-all shadow-sm hover:border-emerald-400"
+            title="Pilih Warna Background 3D"
+          >
+            <Palette className="w-4 h-4 text-emerald-400 animate-pulse" />
+            <span className="hidden sm:inline">Tema 3D</span>
           </button>
 
           {/* Desktop Hardware Simulator Button */}

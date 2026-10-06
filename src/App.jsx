@@ -9,6 +9,8 @@ import HardwareSimulator from './components/HardwareSimulator';
 import ActivityLogs from './components/ActivityLogs';
 import WeatherWidget from './components/WeatherWidget';
 import SettingsModal from './components/SettingsModal';
+import ThreeDBackground from './components/ThreeDBackground';
+import ThemeSelectorModal from './components/ThemeSelectorModal';
 
 import { 
   initialSystemState, 
@@ -39,10 +41,20 @@ export default function App() {
   const [logs, setLogs] = useState(initialLogs);
   const [historyData, setHistoryData] = useState(initialHistoryData);
 
-  // Modals
+  // Modals & 3D Theme State
   const [activeZoneToEdit, setActiveZoneToEdit] = useState(null);
   const [isHardwareOpen, setIsHardwareOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [themeId, setThemeId] = useState(() => {
+    return localStorage.getItem('agroflow_theme_3d') || 'cyber-obsidian';
+  });
+
+  const handleSelectTheme = (newThemeId) => {
+    setThemeId(newThemeId);
+    localStorage.setItem('agroflow_theme_3d', newThemeId);
+    addLog('system', `Tema background 3D diubah ke "${newThemeId}".`, 'info');
+  };
 
   // Add Log Helper
   const addLog = (type, message, severity = 'info') => {
@@ -219,87 +231,108 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen relative text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden">
       
-      {/* App Header Bar */}
-      <Header
-        systemState={systemState}
-        setSystemState={setSystemState}
-        onOpenHardware={() => setIsHardwareOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        zonesWateringCount={zones.filter(z => z.valveOpen).length}
-      />
+      {/* Dynamic Interactive 3D Background */}
+      <ThreeDBackground currentThemeId={themeId} />
 
-      {/* Main Content Dashboard */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8">
-        
-        {/* Top Weather Banner */}
-        <WeatherWidget
-          weather={weather}
+      {/* Main Foreground Container */}
+      <div className="relative z-10 flex flex-col min-h-screen justify-between">
+
+        {/* App Header Bar */}
+        <Header
           systemState={systemState}
-          onSetRainDelay={(hours) => {
-            setSystemState(prev => ({ ...prev, rainDelayHours: hours }));
-            addLog('system', `Tunda Hujan diatur ke ${hours} Jam.`, 'info');
-          }}
+          setSystemState={setSystemState}
+          onOpenHardware={() => setIsHardwareOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenThemeModal={() => setIsThemeModalOpen(true)}
+          zonesWateringCount={zones.filter(z => z.valveOpen).length}
         />
 
-        {/* Global Overview Cards (Sensors & Water Tank) */}
-        <OverviewCards
-          systemState={systemState}
-          zones={zones}
-          weather={weather}
-        />
+        {/* Main Content Dashboard */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8">
+          
+          {/* Top Weather Banner */}
+          <WeatherWidget
+            weather={weather}
+            systemState={systemState}
+            onSetRainDelay={(hours) => {
+              setSystemState(prev => ({ ...prev, rainDelayHours: hours }));
+              addLog('system', `Tunda Hujan diatur ke ${hours} Jam.`, 'info');
+            }}
+          />
 
-        {/* Section Title: Zone Controller Cards */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-emerald-400" />
-              <span>Kontrol Utama Zona Penyiraman ({zones.length} Sektor)</span>
-            </h2>
-            <p className="text-xs text-slate-400">
-              Setiap zona terhubung ke Solenoid Valve 12V dan Probe Kelembapan Capacitive
-            </p>
+          {/* Global Overview Cards (Sensors & Water Tank) */}
+          <OverviewCards
+            systemState={systemState}
+            zones={zones}
+            weather={weather}
+          />
+
+          {/* Section Title: Zone Controller Cards */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                <Droplets className="w-5 h-5 text-emerald-400" />
+                <span>Kontrol Utama Zona Penyiraman ({zones.length} Sektor)</span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Setiap zona terhubung ke Solenoid Valve 12V dan Probe Kelembapan Capacitive
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Zone Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {zones.map(zone => (
-            <ZoneCard
-              key={zone.id}
-              zone={zone}
-              onStartWatering={handleStartWatering}
-              onStopWatering={handleStopWatering}
-              onUpdateThreshold={handleUpdateThreshold}
-              onEditZone={(z) => setActiveZoneToEdit(z)}
-            />
-          ))}
-        </div>
+          {/* Zone Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {zones.map(zone => (
+              <ZoneCard
+                key={zone.id}
+                zone={zone}
+                onStartWatering={handleStartWatering}
+                onStopWatering={handleStopWatering}
+                onUpdateThreshold={handleUpdateThreshold}
+                onEditZone={(z) => setActiveZoneToEdit(z)}
+              />
+            ))}
+          </div>
 
-        {/* Schedule Manager Component */}
-        <ScheduleManager
-          schedules={schedules}
-          zones={zones}
-          onToggleSchedule={handleToggleSchedule}
-          onAddSchedule={handleAddSchedule}
-          onDeleteSchedule={handleDeleteSchedule}
-        />
+          {/* Schedule Manager Component */}
+          <ScheduleManager
+            schedules={schedules}
+            zones={zones}
+            onToggleSchedule={handleToggleSchedule}
+            onAddSchedule={handleAddSchedule}
+            onDeleteSchedule={handleDeleteSchedule}
+          />
 
-        {/* Analytics & Graph Section */}
-        <SensorAnalyticsChart
-          historyData={historyData}
-          zones={zones}
-          onSimulateTick={handleSimulateTick}
-        />
+          {/* Analytics & Graph Section */}
+          <SensorAnalyticsChart
+            historyData={historyData}
+            zones={zones}
+            onSimulateTick={handleSimulateTick}
+          />
 
-        {/* System Activity Logs */}
-        <ActivityLogs
-          logs={logs}
-          onClearLogs={() => setLogs([])}
-        />
+          {/* System Activity Logs */}
+          <ActivityLogs
+            logs={logs}
+            onClearLogs={() => setLogs([])}
+          />
 
-      </main>
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md py-6 px-4 text-center text-xs text-slate-500">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>© 2026 AgroFlow Smart Irrigation IoT by Khoerul Awaludin. All rights reserved.</p>
+            <div className="flex items-center space-x-4 text-slate-400">
+              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-emerald-400" /> ESP32 Automatic Water System</span>
+              <span>•</span>
+              <span className="text-emerald-400 font-medium">System Status: Operational</span>
+            </div>
+          </div>
+        </footer>
+
+      </div>
 
       {/* Modals & Hardware Simulator */}
       <ZoneModal
@@ -327,17 +360,12 @@ export default function App() {
         onAddLog={addLog}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/60 py-6 px-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>© 2026 AgroFlow Smart Irrigation IoT by Khoerul Awaludin. All rights reserved.</p>
-          <div className="flex items-center space-x-4 text-slate-400">
-            <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-emerald-400" /> ESP32 Automatic Water System</span>
-            <span>•</span>
-            <span className="text-emerald-400 font-medium">System Status: Operational</span>
-          </div>
-        </div>
-      </footer>
+      <ThemeSelectorModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        currentThemeId={themeId}
+        onSelectTheme={handleSelectTheme}
+      />
 
     </div>
   );
