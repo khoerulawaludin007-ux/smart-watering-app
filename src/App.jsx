@@ -48,11 +48,15 @@ export default function App() {
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('agroflow_user');
-      return savedUser ? JSON.parse(savedUser) : {
-        name: 'Khoerul Awaludin',
-        email: 'khoerul.awaludin@kci.id',
-        role: 'Super Admin IoT'
-      };
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.email === 'khoerul.awaludin@kci.id') {
+          localStorage.removeItem('agroflow_user');
+          return null;
+        }
+        return parsed;
+      }
+      return null;
     } catch (e) {
       return null;
     }

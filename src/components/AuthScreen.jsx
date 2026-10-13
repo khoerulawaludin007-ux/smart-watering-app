@@ -67,9 +67,9 @@ export default function AuthScreen({ onLoginSuccess }) {
       setSuccessMessage('Login Berhasil! Selamat datang kembali.');
       setTimeout(() => {
         onLoginSuccess({
-          name: email.split('@')[0] || 'Khoerul Awaludin',
+          name: email.split('@')[0] || 'Pengguna',
           email: email,
-          role: 'Super Admin IoT',
+          role: 'Admin / Pengguna',
           avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`
         });
       }, 800);
@@ -181,7 +181,7 @@ export default function AuthScreen({ onLoginSuccess }) {
                 <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
                   type="text"
-                  placeholder="Contoh: Khoerul Awaludin"
+                  placeholder="Masukkan nama lengkap"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
