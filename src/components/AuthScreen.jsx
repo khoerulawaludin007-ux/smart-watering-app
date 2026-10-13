@@ -13,6 +13,32 @@ import {
   UserPlus 
 } from 'lucide-react';
 
+// Local accounts storage key
+const ACCOUNTS_STORAGE_KEY = 'agroflow_registered_users';
+
+const DEFAULT_ACCOUNTS = [
+  {
+    name: 'Admin AgroFlow',
+    email: 'admin@agroflow.id',
+    password: 'admin123',
+    role: 'Pemilik Kebun / Admin'
+  }
+];
+
+const getRegisteredAccounts = () => {
+  try {
+    const data = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+    if (!data) {
+      localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(DEFAULT_ACCOUNTS));
+      return DEFAULT_ACCOUNTS;
+    }
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_ACCOUNTS;
+  } catch (e) {
+    return DEFAULT_ACCOUNTS;
+  }
+};
+
 export default function AuthScreen({ onLoginSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -34,9 +60,15 @@ export default function AuthScreen({ onLoginSuccess }) {
     setErrorMessage('');
     setSuccessMessage('');
 
+    const accounts = getRegisteredAccounts();
+
     if (isRegister) {
-      if (!fullName || !email || !password || !confirmPassword) {
+      if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
         setErrorMessage('Mohon lengkapi seluruh kolom pendaftaran!');
+        return;
+      }
+      if (!email.includes('@')) {
+        setErrorMessage('Format alamat email tidak valid!');
         return;
       }
       if (password !== confirmPassword) {
@@ -48,29 +80,62 @@ export default function AuthScreen({ onLoginSuccess }) {
         return;
       }
 
+      const emailLower = email.trim().toLowerCase();
+      const existingUser = accounts.find(acc => acc.email.toLowerCase() === emailLower);
+      if (existingUser) {
+        setErrorMessage('Email ini sudah terdaftar! Silakan beralih ke tab Masuk.');
+        return;
+      }
+
+      const newUser = {
+        name: fullName.trim(),
+        email: emailLower,
+        password: password,
+        role: role
+      };
+
+      try {
+        localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify([...accounts, newUser]));
+      } catch (err) {
+        console.error('Failed to save account:', err);
+      }
+
       setSuccessMessage('Pendaftaran berhasil! Mengalihkan ke Dashboard...');
       setTimeout(() => {
         onLoginSuccess({
-          name: fullName,
-          email: email,
-          role: role,
-          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(fullName)}`
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(newUser.name)}`
         });
       }, 1000);
 
     } else {
-      if (!email || !password) {
+      if (!email.trim() || !password) {
         setErrorMessage('Masukkan email dan password kamu!');
+        return;
+      }
+
+      const emailLower = email.trim().toLowerCase();
+      const matchedUser = accounts.find(acc => acc.email.toLowerCase() === emailLower);
+
+      if (!matchedUser) {
+        setErrorMessage('Email tidak terdaftar! Silakan daftar akun baru terlebih dahulu.');
+        return;
+      }
+
+      if (matchedUser.password !== password) {
+        setErrorMessage('Password salah! Periksa kembali password Anda.');
         return;
       }
 
       setSuccessMessage('Login Berhasil! Selamat datang kembali.');
       setTimeout(() => {
         onLoginSuccess({
-          name: email.split('@')[0] || 'Pengguna',
-          email: email,
-          role: 'Admin / Pengguna',
-          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`
+          name: matchedUser.name || matchedUser.email.split('@')[0],
+          email: matchedUser.email,
+          role: matchedUser.role || 'Pemilik Kebun / Admin',
+          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(matchedUser.name || matchedUser.email)}`
         });
       }, 800);
     }
