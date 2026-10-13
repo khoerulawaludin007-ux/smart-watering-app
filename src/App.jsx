@@ -74,7 +74,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Update URL based on authentication status: /login if not authenticated, / if authenticated
+  // Update URL based on authentication status: /login if not authenticated, /dashboard if authenticated
   useEffect(() => {
     if (!user) {
       if (window.location.pathname !== '/login') {
@@ -82,9 +82,9 @@ export default function App() {
         setCurrentPath('/login');
       }
     } else {
-      if (window.location.pathname === '/login') {
-        window.history.replaceState(null, '', '/');
-        setCurrentPath('/');
+      if (window.location.pathname !== '/dashboard') {
+        window.history.replaceState(null, '', '/dashboard');
+        setCurrentPath('/dashboard');
       }
     }
   }, [user]);
@@ -93,10 +93,8 @@ export default function App() {
     setUser(userData);
     localStorage.setItem('agroflow_user', JSON.stringify(userData));
     addLog('system', `Pengguna ${userData.name} (${userData.role}) berhasil masuk.`, 'success');
-    if (window.location.pathname === '/login') {
-      window.history.pushState(null, '', '/');
-      setCurrentPath('/');
-    }
+    window.history.pushState(null, '', '/dashboard');
+    setCurrentPath('/dashboard');
   };
 
   const handleLogout = () => {
