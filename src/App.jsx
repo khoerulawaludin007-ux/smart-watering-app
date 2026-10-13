@@ -62,16 +62,49 @@ export default function App() {
     }
   });
 
+  // URL Path Routing State
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
+
+  // Listen to browser Back / Forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update URL based on authentication status: /login if not authenticated, / if authenticated
+  useEffect(() => {
+    if (!user) {
+      if (window.location.pathname !== '/login') {
+        window.history.replaceState(null, '', '/login');
+        setCurrentPath('/login');
+      }
+    } else {
+      if (window.location.pathname === '/login') {
+        window.history.replaceState(null, '', '/');
+        setCurrentPath('/');
+      }
+    }
+  }, [user]);
+
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     localStorage.setItem('agroflow_user', JSON.stringify(userData));
     addLog('system', `Pengguna ${userData.name} (${userData.role}) berhasil masuk.`, 'success');
+    if (window.location.pathname === '/login') {
+      window.history.pushState(null, '', '/');
+      setCurrentPath('/');
+    }
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('agroflow_user');
     addLog('system', 'Pengguna telah keluar dari sistem.', 'info');
+    window.history.pushState(null, '', '/login');
+    setCurrentPath('/login');
   };
 
   // Language State (id / en)
