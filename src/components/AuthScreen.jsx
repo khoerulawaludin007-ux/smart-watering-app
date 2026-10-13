@@ -4,16 +4,13 @@ import {
   Mail, 
   Lock, 
   User, 
-  ShieldCheck, 
-  Sparkles, 
   ArrowRight, 
   CheckCircle2, 
   Eye, 
-  EyeOff,
-  KeyRound,
-  Cpu,
-  LogIn,
-  UserPlus
+  EyeOff, 
+  KeyRound, 
+  LogIn, 
+  UserPlus 
 } from 'lucide-react';
 
 export default function AuthScreen({ onLoginSuccess }) {
@@ -77,19 +74,6 @@ export default function AuthScreen({ onLoginSuccess }) {
         });
       }, 800);
     }
-  };
-
-  // Quick Demo Login Handler
-  const handleDemoLogin = (demoName, demoEmail, demoRole) => {
-    setSuccessMessage(`Login Demo sebagai ${demoName}...`);
-    setTimeout(() => {
-      onLoginSuccess({
-        name: demoName,
-        email: demoEmail,
-        role: demoRole,
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(demoName)}`
-      });
-    }, 600);
   };
 
   return (
@@ -293,34 +277,6 @@ export default function AuthScreen({ onLoginSuccess }) {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        {/* Quick Demo Access Bar */}
-        <div className="mt-6 pt-5 border-t border-slate-800/80 text-center">
-          <p className="text-[11px] text-slate-400 mb-3 flex items-center justify-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Atau Akses Cepat Mode Demo:</span>
-          </p>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleDemoLogin('Khoerul Awaludin', 'khoerul.awaludin@kci.id', 'Super Admin IoT')}
-              className="px-3 py-2 bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-[11px] font-semibold text-slate-300 hover:text-emerald-400 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Admin Demo</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleDemoLogin('Tamu Kebun', 'tamu@agroflow.id', 'Tamu Pengamat')}
-              className="px-3 py-2 bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 rounded-xl text-[11px] font-semibold text-slate-300 hover:text-cyan-400 transition-all flex items-center justify-center gap-1.5"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Mode Tamu</span>
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>
